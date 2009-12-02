@@ -2,7 +2,6 @@ package CPAN::Testers::Reports::Query::JSON;
 
 use Moose;
 use Carp;
-use JSON::Any;
 use LWP::Simple;
 use CPAN::Testers::WWW::Reports::Parser;
 
@@ -48,6 +47,7 @@ sub parse_data {
         format => 'JSON',    # or 'JSON'
         data   => $data,
     );
+    return $self->parser($obj);
 
 }
 
