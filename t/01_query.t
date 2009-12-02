@@ -19,12 +19,14 @@ my @tests = (
 foreach my $test (@tests) {
 
     ok( 1, "$test->{name} tests" );
-    my $query = CPAN::Testers::Reports::Query::JSON->new(
+    my $dist_query = CPAN::Testers::Reports::Query::JSON->new(
         { distribution => $test->{distribution}, } );
-    is( ref($query),
+    is( ref($dist_query),
         'CPAN::Testers::Reports::Query::JSON',
         'Got object back'
     );
-    is( $query->json_url, $test->{json_url}, "JSON urls match" );
+    is( $dist_query->json_url, $test->{json_url}, "JSON urls match" );
+    ok($dist_query->all_passed(),'all');
+    
 
 }

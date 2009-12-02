@@ -2,6 +2,8 @@ package CPAN::Testers::Reports::Query::JSON;
 
 use Moose;
 use Carp;
+
+use version;
 use LWP::Simple;
 use CPAN::Testers::WWW::Reports::Parser;
 
@@ -35,10 +37,50 @@ gets the test results back, it then parses these to answer a few simple question
 =cut
 
 has 'distribution' => ( is => 'rw' );
-has 'version'      => ( is => 'rw' );
+has 'version'      => ( is => 'rw', isa => 'version' );
 has 'parser'       => ( is => 'rw' );
 
-sub parse_data {
+my @fields = qw(distname version grade osname platform csspatch perl);
+
+
+sub all_passed {
+    my $self = shift;
+
+    my $parser = $self->get_parser();
+
+    $parser->filter(@fields);
+
+    my $ok = 0;
+
+    my $max_version = version->new('0');
+    while ( my $data = $parser->report() ) {
+        
+        # Only want non-patched Perl at the moment
+        next if $data->{csspatch} eq 'unp';
+        
+        my $this_version = version->new($data->{version});
+        if($this_version > $max_version) {
+            $max_version = $self->version($this_version);
+        }
+                
+        # use Data::Dumper;
+        # warn Dumper($data);
+
+    }
+    
+    # FIXME: should return false
+    return 1;
+
+
+}
+
+sub get_parser {
+    my $self = shift;
+    $self->_get_parser() unless $self->parser();
+    return $self->parser();
+}
+
+sub _get_parser {
     my $self = shift;
 
     my $data = $self->raw_json();

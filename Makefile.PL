@@ -11,6 +11,7 @@ WriteMakefile(
         'Moose'                               => 0,
         'Test::More'                          => 0,
         'CPAN::Testers::WWW::Reports::Parser' => 0.01,
+        'version'                             => 0,
     },
 );
 
