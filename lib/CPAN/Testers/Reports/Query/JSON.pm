@@ -18,16 +18,16 @@ our $VERSION = '0.01';
   my $dist_query = CPAN::Testers::Reports::Query::JSON->new({
     distribution => 'Data::Pageset',
     version => '1.01', # optional, will default to latest version
-  });
+  });s
   
-  print "All passed\n" if $dist_query->all_passed();
+  print "All passed\n" if $dist_query->number_failed() == 0;
   
-  print "Non windows passwd\n" if $dist_query->non_windows_passed();
+  print "Non windows passwd\n" if $dist_query->non_windows_failed();
   
-  print "Windows passwd\n" if $dist_query->windows_pass();
+  print "Windows passwd\n" if $dist_query->windows_failed();
   
-  # get the raw data for all results, or a specific version if supplied
-  my $data = $dist_query->fetch_data($version);
+  # Return a CPAN::Testers::WWW::Reports::Parser object
+  my $parser = $dist_query->get_parser();
   
 =head1 DESCRIPTION
 
@@ -40,32 +40,60 @@ has 'distribution' => ( is => 'rw' );
 has 'version'      => ( is => 'rw', isa => 'version' );
 has 'parser'       => ( is => 'rw' );
 
-sub all_passed {
+sub number_failed {
     my $self = shift;
 
-    my $parser = $self->get_parser();
+    my $number_failed = 0;
+    my $parser        = $self->get_parser();
 
-    my $ok = 0;
+    while ( my $data = @{ $self->_get_data_for_version() } ) {
+
+        # Only want non-patched Perl at the moment
+        next if $data->{csspatch} eq 'unp';
+        $number_failed++ unless $data->{status} eq 'PASS';
+    }
+
+    return $number_failed;
+}
+
+=head2 find_current_version
+
+    my $current_version = $query->find_current_version();
+
+Sets $query->version() and returns the largest version
+
+=cut
+
+sub find_current_version {
+    my $self   = shift;
+    my $parser = $self->get_parser();
 
     my $max_version = version->new('0');
     while ( my $data = $parser->report() ) {
-        
-        # Only want non-patched Perl at the moment
-        next if $data->{csspatch} eq 'unp';
-        
-        my $this_version = version->new($data->{version});
-        if($this_version > $max_version) {
+
+        my $this_version = version->new( $data->{version} );
+        if ( $this_version > $max_version ) {
             $max_version = $self->version($this_version);
         }
-                
-        # use Data::Dumper;
-        # warn Dumper($data);
-
     }
-    
-    # FIXME: should return false
-    return 1;
 
+    return $self->version($max_version);
+}
+
+sub _get_data_for_version {
+    my $self    = shift;
+    my $version = $self->version || $self->find_current_version;
+    my $parser  = $self->get_parser();
+
+    my @data;
+    while ( my $data = $parser->report() ) {
+
+        # Only want non-patched Perl at the moment
+        #next if $data->{csspatch} eq 'unp';
+
+        push( @data, $data ) if $data->{version} eq $version;
+    }
+    return \@data;
 
 }
 

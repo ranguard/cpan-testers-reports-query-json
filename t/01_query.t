@@ -26,6 +26,6 @@ foreach my $test (@tests) {
         = CTRQJTester->new( { distribution => $test->{distribution}, } );
     is( ref($dist_query),      'CTRQJTester',     'Got object back' );
     is( $dist_query->json_url, $test->{json_url}, "JSON urls match" );
-    ok( $dist_query->all_passed(), 'all' );
+    ok( $dist_query->number_failed() == 0, 'all' );
 
 }
