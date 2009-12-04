@@ -3,10 +3,13 @@
 use strict;
 use warnings;
 
-use lib qw(lib);
+use lib qw(lib t);
 use Test::More qw(no_plan);
 
-BEGIN { use_ok("CPAN::Testers::Reports::Query::JSON") }
+BEGIN {
+    use_ok("CPAN::Testers::Reports::Query::JSON");
+    use_ok("CTRQJTester");
+}
 
 my @tests = (
     {   name         => 'Data Pageset - pass',
@@ -19,14 +22,10 @@ my @tests = (
 foreach my $test (@tests) {
 
     ok( 1, "$test->{name} tests" );
-    my $dist_query = CPAN::Testers::Reports::Query::JSON->new(
-        { distribution => $test->{distribution}, } );
-    is( ref($dist_query),
-        'CPAN::Testers::Reports::Query::JSON',
-        'Got object back'
-    );
+    my $dist_query
+        = CTRQJTester->new( { distribution => $test->{distribution}, } );
+    is( ref($dist_query),      'CTRQJTester',     'Got object back' );
     is( $dist_query->json_url, $test->{json_url}, "JSON urls match" );
-    ok($dist_query->all_passed(),'all');
-    
+    ok( $dist_query->all_passed(), 'all' );
 
 }

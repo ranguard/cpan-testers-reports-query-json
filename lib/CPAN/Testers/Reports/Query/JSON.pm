@@ -40,15 +40,10 @@ has 'distribution' => ( is => 'rw' );
 has 'version'      => ( is => 'rw', isa => 'version' );
 has 'parser'       => ( is => 'rw' );
 
-my @fields = qw(distname version grade osname platform csspatch perl);
-
-
 sub all_passed {
     my $self = shift;
 
     my $parser = $self->get_parser();
-
-    $parser->filter(@fields);
 
     my $ok = 0;
 
