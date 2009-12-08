@@ -63,15 +63,16 @@ sub number_failed {
     foreach my $data ( @{ $self->_get_data_for_version() } ) {
 
         # Only want non-patched Perl at the moment
-        next if $data->{csspatch} ne 'unp';
+        next if $data->csspatch() ne 'unp';
         if ( $conf->{os_exclude} ) {
-#            next RESULT if $conf->{os_exclude}->{ $data->{osname} };
+            next if $conf->{os_exclude}->{ $data->osname() };
         }
         if ( $conf->{os_include_only} ) {
-#            next RESULT unless $conf->{os_include_only}->{ $data->{osname} };
+
+            next unless $conf->{os_include_only}->{ $data->osname() };
         }
 
- #       $number_failed++ unless $data->{status} eq 'PASS';
+        $number_failed++ unless $data->state eq 'pass';
     }
     return $number_failed;
 }
@@ -91,7 +92,7 @@ sub find_current_version {
     my $max_version = version->new('0');
     while ( my $data = $parser->report() ) {
 
-        my $this_version = version->new( $data->{version} );
+        my $this_version = version->new( $data->version() );
         if ( $this_version > $max_version ) {
             $max_version = $self->version($this_version);
         }
@@ -107,11 +108,6 @@ sub _get_data_for_version {
 
     my @data;
     while ( my $data = $parser->report() ) {
-
-        # Only want non-patched Perl at the moment
-        #next if $data->{csspatch} eq 'unp';
-        use Data::Dumper;
-        warn Dumper($data);
 
         push( @data, $data ) if $data->version() eq $version;
     }
@@ -131,9 +127,9 @@ sub _get_parser {
     my $data = $self->raw_json();
 
     my $obj = CPAN::Testers::WWW::Reports::Parser->new(
-        format  => 'JSON',    # or 'JSON'
-        data    => $data,
-        reports_as_objects => 1,
+        format         => 'JSON',    # or 'JSON'
+        data           => $data,
+        report_objects => 1,
     );
     return $self->parser($obj);
 
