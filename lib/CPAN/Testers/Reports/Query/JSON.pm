@@ -37,22 +37,42 @@ gets the test results back, it then parses these to answer a few simple question
 =cut
 
 has 'distribution' => ( is => 'rw' );
-has 'version'      => ( is => 'rw', isa => 'version' );
+has 'version'      => ( is => 'rw' );
 has 'parser'       => ( is => 'rw' );
 
+=head2 number_failed
+
+my $failed = $dist_query->number_failed( { os_include_only => { '', } } );
+
+my $failed = $dist_query->number_failed(
+    {
+        os_exclude => { '', },
+    }
+);
+
+  
+=cut
+
 sub number_failed {
-    my $self = shift;
+    my ( $self, $conf ) = @_;
+    $conf ||= {};
 
     my $number_failed = 0;
     my $parser        = $self->get_parser();
 
-    while ( my $data = @{ $self->_get_data_for_version() } ) {
+    foreach my $data ( @{ $self->_get_data_for_version() } ) {
 
         # Only want non-patched Perl at the moment
-        next if $data->{csspatch} eq 'unp';
-        $number_failed++ unless $data->{status} eq 'PASS';
-    }
+        next if $data->{csspatch} ne 'unp';
+        if ( $conf->{os_exclude} ) {
+#            next RESULT if $conf->{os_exclude}->{ $data->{osname} };
+        }
+        if ( $conf->{os_include_only} ) {
+#            next RESULT unless $conf->{os_include_only}->{ $data->{osname} };
+        }
 
+ #       $number_failed++ unless $data->{status} eq 'PASS';
+    }
     return $number_failed;
 }
 
@@ -90,8 +110,10 @@ sub _get_data_for_version {
 
         # Only want non-patched Perl at the moment
         #next if $data->{csspatch} eq 'unp';
+        use Data::Dumper;
+        warn Dumper($data);
 
-        push( @data, $data ) if $data->{version} eq $version;
+        push( @data, $data ) if $data->version() eq $version;
     }
     return \@data;
 
@@ -109,8 +131,9 @@ sub _get_parser {
     my $data = $self->raw_json();
 
     my $obj = CPAN::Testers::WWW::Reports::Parser->new(
-        format => 'JSON',    # or 'JSON'
-        data   => $data,
+        format  => 'JSON',    # or 'JSON'
+        data    => $data,
+        reports_as_objects => 1,
     );
     return $self->parser($obj);
 
