@@ -1,13 +1,26 @@
 package CPAN::Testers::Reports::Query::JSON;
 
-use Moose;
+use strict;
+use warnings;
 use Carp;
 
 use version;
+
+use base qw(Class::Accessor::Faster);
+
 use LWP::Simple;
 use CPAN::Testers::WWW::Reports::Parser;
 
+my @methods = qw(distribution version parser);
+
+__PACKAGE__->mk_accessors(@methods);
+
 our $VERSION = '0.01';
+
+my %window_oses = (
+    'MSWin32' => 1,
+    'cygwin'  => 1,
+);
 
 =HEAD1 NAME
  
@@ -36,9 +49,19 @@ gets the test results back, it then parses these to answer a few simple question
 
 =cut
 
-has 'distribution' => ( is => 'rw' );
-has 'version'      => ( is => 'rw' );
-has 'parser'       => ( is => 'rw' );
+sub windows_failed {
+    my $self = shift;
+
+    return $self->number_failed( { os_include_only => \%window_oses, } );
+
+}
+
+sub non_windows_failed {
+    my $self = shift;
+
+    return $self->number_failed( { os_exclude => \%window_oses } );
+
+}
 
 =head2 number_failed
 

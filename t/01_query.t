@@ -23,8 +23,9 @@ my @tests = (
         version      => 1.04,
         json_url   => 'http://www.cpantesters.org/distro/D/Data-Pageset.json',
         total_fail => 1,
-        fail_conf => {
-            
+        fail_conf  => {
+            windows_failed     => 0,
+            non_windows_failed => 1
         }
     },
 
@@ -40,6 +41,21 @@ foreach my $test (@tests) {
     );
     is( ref($dist_query),      'CTRQJTester',     'Got object back' );
     is( $dist_query->json_url, $test->{json_url}, "JSON urls match" );
-    ok( $dist_query->number_failed() == $test->{total_fail}, 'Correct number of fails' );
+    ok( $dist_query->number_failed() == $test->{total_fail},
+        'Correct number of fails' );
+    if ( $test->{total_fail} ) {
 
+        #    windows_failed
+        is( $dist_query->windows_failed,
+            $test->{fail_conf}->{windows_failed},
+            'Matched window fails'
+        );
+
+        # Non-window fails
+        is( $dist_query->non_windows_failed,
+            $test->{fail_conf}->{non_windows_failed},
+            'Matched non window fails'
+        );
+
+    }
 }
