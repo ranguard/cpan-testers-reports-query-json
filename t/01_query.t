@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use lib qw(lib t /home/leo/git/CPAN-Testers-WWW-Reports-Parser/lib);
+use lib qw(lib t /Users/leo/git/CPAN-Testers-WWW-Reports-Parser/lib);
 use Test::More qw(no_plan);
 
 BEGIN {

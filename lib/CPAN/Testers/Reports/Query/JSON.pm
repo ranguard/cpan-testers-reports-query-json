@@ -28,19 +28,32 @@ my %window_oses = (
   
 =head1 SYNOPSIS
 
-  my $dist_query = CPAN::Testers::Reports::Query::JSON->new({
-    distribution => 'Data::Pageset',
-    version => '1.01', # optional, will default to latest version
-  });s
-  
-  print "All passed\n" if $dist_query->number_failed() == 0;
-  
-  print "Non windows passwd\n" if $dist_query->non_windows_failed();
-  
-  print "Windows passwd\n" if $dist_query->windows_failed();
-  
-  # Return a CPAN::Testers::WWW::Reports::Parser object
-  my $parser = $dist_query->get_parser();
+    my $dist_query = CPAN::Testers::Reports::Query::JSON->new(
+        {   distribution => 'Data::Pageset',
+            version => '1.01',    # optional, will default to latest version
+        }
+    );
+
+    printf "There were %s tests, %s passed, %s failed - e.g. %s percent",
+        $dist_query->total_tests(),
+        $dist_query->number_passed(),
+        $dist_query->number_failed(),
+        $dist_query->percent_passed();
+
+    printf "There were %s windows tests, %s passed, %s failed - e.g. %s percent",
+        $dist_query->windows_total_tests(),
+        $dist_query->windows_number_passed(),
+        $dist_query->windows_number_failed(),
+        $dist_query->windows_percent_passed();
+
+    printf "There were %s windows tests, %s passed, %s failed - e.g. %s percent",
+        $dist_query->non_windows_total_tests(),
+        $dist_query->non_windows_number_passed(),
+        $dist_query->non_windows_number_failed(),
+        $dist_query->non_windows_percent_passed();
+
+    # Return a CPAN::Testers::WWW::Reports::Parser object
+    my $parser = $dist_query->get_parser();
   
 =head1 DESCRIPTION
 
@@ -76,11 +89,12 @@ my $failed = $dist_query->number_failed(
   
 =cut
 
-sub number_failed {
+sub percent_passed {
     my ( $self, $conf ) = @_;
     $conf ||= {};
 
     my $number_failed = 0;
+    my $number_of_tests;
     my $parser        = $self->get_parser();
 
     foreach my $data ( @{ $self->_get_data_for_version() } ) {
@@ -94,7 +108,7 @@ sub number_failed {
 
             next unless $conf->{os_include_only}->{ $data->osname() };
         }
-
+        $number_of_tests++;
         $number_failed++ unless $data->state eq 'pass';
     }
     return $number_failed;
@@ -152,7 +166,7 @@ sub _get_parser {
     my $obj = CPAN::Testers::WWW::Reports::Parser->new(
         format         => 'JSON',    # or 'JSON'
         data           => $data,
-        report_objects => 1,
+        objects => 1,
     );
     return $self->parser($obj);
 
