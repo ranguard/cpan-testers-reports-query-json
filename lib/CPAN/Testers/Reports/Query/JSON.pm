@@ -1,19 +1,18 @@
 package CPAN::Testers::Reports::Query::JSON;
-
-use strict;
-use warnings;
-use Carp;
+use Moose;
 
 use version;
-
-use base qw(Class::Accessor::Faster);
-
 use LWP::Simple;
 use CPAN::Testers::WWW::Reports::Parser;
+use CPAN::Testers::Reports::Query::JSON::Set;
 
-my @methods = qw(distribution version parser);
-
-__PACKAGE__->mk_accessors(@methods);
+has distribution => ( isa => 'Str', is => 'ro', );
+has version      => ( isa => 'Str', is => 'rw', );
+has parser       => (
+    isa => 'Str',
+    is  => 'rw',
+    isa => 'CPAN::Testers::WWW::Reports::Parser'
+);
 
 our $VERSION = '0.01';
 
@@ -34,23 +33,29 @@ my %window_oses = (
         }
     );
 
+    print "Processing version: " . $dist_query->version() . "\n";
+    print "Other versions are: " . join(" ", @{$dist_query->versions()}) . "\n";
+
+    my $all = $dist_query->all();
     printf "There were %s tests, %s passed, %s failed - e.g. %s percent",
-        $dist_query->total_tests(),
-        $dist_query->number_passed(),
-        $dist_query->number_failed(),
-        $dist_query->percent_passed();
+        $all->total_tests(),
+        $all->number_passed(),
+        $all->number_failed(),
+        $all->percent_passed();
 
+    my $win32_only = $dist_query->win32_only();
     printf "There were %s windows tests, %s passed, %s failed - e.g. %s percent",
-        $dist_query->windows_total_tests(),
-        $dist_query->windows_number_passed(),
-        $dist_query->windows_number_failed(),
-        $dist_query->windows_percent_passed();
+        $win32_only->total_tests(),
+        $win32_only->number_passed(),
+        $win32_only->number_failed(),
+        $win32_only->percent_passed();
 
+    my $non_win32 = $dist_query->non_win32();
     printf "There were %s windows tests, %s passed, %s failed - e.g. %s percent",
-        $dist_query->non_windows_total_tests(),
-        $dist_query->non_windows_number_passed(),
-        $dist_query->non_windows_number_failed(),
-        $dist_query->non_windows_percent_passed();
+        $non_win32->total_tests(),
+        $non_win32->number_passed(),
+        $non_win32->number_failed(),
+        $non_win32->percent_passed();
 
     # Return a CPAN::Testers::WWW::Reports::Parser object
     my $parser = $dist_query->get_parser();
@@ -61,6 +66,16 @@ This module queries the cpantesters website (via the JSON interface) and
 gets the test results back, it then parses these to answer a few simple questions.
 
 =cut
+
+
+sub BUILD {
+    my ( $self, $param ) = @_;
+    
+    # Go get the data
+    
+    
+    
+}
 
 sub windows_failed {
     my $self = shift;
@@ -95,7 +110,7 @@ sub percent_passed {
 
     my $number_failed = 0;
     my $number_of_tests;
-    my $parser        = $self->get_parser();
+    my $parser = $self->get_parser();
 
     foreach my $data ( @{ $self->_get_data_for_version() } ) {
 
@@ -164,8 +179,8 @@ sub _get_parser {
     my $data = $self->raw_json();
 
     my $obj = CPAN::Testers::WWW::Reports::Parser->new(
-        format         => 'JSON',    # or 'JSON'
-        data           => $data,
+        format  => 'JSON',    # or 'JSON'
+        data    => $data,
         objects => 1,
     );
     return $self->parser($obj);
