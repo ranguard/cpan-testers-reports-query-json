@@ -7,7 +7,7 @@ use CPAN::Testers::WWW::Reports::Parser;
 use CPAN::Testers::Reports::Query::JSON::Set;
 
 has distribution => ( isa => 'Str', is => 'ro', );
-has version      => ( isa => 'Str', is => 'rw', );
+has version      => ( isa => 'Str', is => 'rw', default => '');
 has parser       => (
     isa => 'Str',
     is  => 'rw',
@@ -15,11 +15,6 @@ has parser       => (
 );
 
 our $VERSION = '0.01';
-
-my %window_oses = (
-    'MSWin32' => 1,
-    'cygwin'  => 1,
-);
 
 =HEAD1 NAME
  
@@ -67,50 +62,46 @@ gets the test results back, it then parses these to answer a few simple question
 
 =cut
 
-
-sub BUILD {
-    my ( $self, $param ) = @_;
-    
-    # Go get the data
-    
-    
-    
-}
-
-sub windows_failed {
+sub all {
     my $self = shift;
 
-    return $self->number_failed( { os_include_only => \%window_oses, } );
-
+    return $self->_create_set();
 }
 
-sub non_windows_failed {
+sub win32_only {
     my $self = shift;
 
-    return $self->number_failed( { os_exclude => \%window_oses } );
+    return $self->_create_set(
+        {   os_include_only => {
+                'MSWin32' => 1,
+                'cygwin'  => 1,
+            },
+        }
+    );
 
 }
 
-=head2 number_failed
+sub non_win32 {
+    my $self = shift;
 
-my $failed = $dist_query->number_failed( { os_include_only => { '', } } );
+    return $self->_create_set(
+        {   os_exclude => {
+                'MSWin32' => 1,
+                'cygwin'  => 1,
+            },
+        }
+    );
 
-my $failed = $dist_query->number_failed(
-    {
-        os_exclude => { '', },
-    }
-);
+}
 
-  
-=cut
-
-sub percent_passed {
+sub _create_set {
     my ( $self, $conf ) = @_;
+
     $conf ||= {};
 
-    my $number_failed = 0;
-    my $number_of_tests;
     my $parser = $self->get_parser();
+
+    my @os_data;
 
     foreach my $data ( @{ $self->_get_data_for_version() } ) {
 
@@ -120,13 +111,13 @@ sub percent_passed {
             next if $conf->{os_exclude}->{ $data->osname() };
         }
         if ( $conf->{os_include_only} ) {
-
             next unless $conf->{os_include_only}->{ $data->osname() };
         }
-        $number_of_tests++;
-        $number_failed++ unless $data->state eq 'pass';
+        push( @os_data, $data );
     }
-    return $number_failed;
+
+    return CPAN::Testers::Reports::Query::JSON::Set->new(
+        { data => \@os_data, } );
 }
 
 =head2 find_current_version
@@ -150,7 +141,7 @@ sub find_current_version {
         }
     }
 
-    return $self->version($max_version);
+    return $self->version("$max_version");
 }
 
 sub _get_data_for_version {
@@ -199,6 +190,8 @@ sub json_url {
 
 sub raw_json {
     my $self = shift;
+
+    # Fetch from website - could have caching here
     return get( $self->json_url() );
 }
 

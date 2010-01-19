@@ -14,6 +14,7 @@ BEGIN {
 my @tests = (
     {   name         => 'Data Pageset - pass',
         distribution => 'Data::Pageset',
+        version      => 1.04,
         json_url   => 'http://www.cpantesters.org/distro/D/Data-Pageset.json',
         total_fail => 0,
     },
@@ -36,26 +37,29 @@ foreach my $test (@tests) {
     ok( 1, "$test->{name} tests" );
     my $dist_query = CTRQJTester->new(
         {   distribution => $test->{distribution},
-            version      => $test->{version} || undef,
+            version      => $test->{version},
         }
     );
     is( ref($dist_query),      'CTRQJTester',     'Got object back' );
     is( $dist_query->json_url, $test->{json_url}, "JSON urls match" );
-    ok( $dist_query->number_failed() == $test->{total_fail},
-        'Correct number of fails' );
-    if ( $test->{total_fail} ) {
-
-        #    windows_failed
-        is( $dist_query->windows_failed,
-            $test->{fail_conf}->{windows_failed},
-            'Matched window fails'
-        );
-
-        # Non-window fails
-        is( $dist_query->non_windows_failed,
-            $test->{fail_conf}->{non_windows_failed},
-            'Matched non window fails'
-        );
-
-    }
+    
+    my $all = $dist_query->all();
+    
+    # ok( $dist_query->number_failed() == $test->{total_fail},
+    #         'Correct number of fails' );
+    #     if ( $test->{total_fail} ) {
+    # 
+    #         #    windows_failed
+    #         is( $dist_query->windows_failed,
+    #             $test->{fail_conf}->{windows_failed},
+    #             'Matched window fails'
+    #         );
+    # 
+    #         # Non-window fails
+    #         is( $dist_query->non_windows_failed,
+    #             $test->{fail_conf}->{non_windows_failed},
+    #             'Matched non window fails'
+    #         );
+    # 
+    #     }
 }
