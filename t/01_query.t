@@ -14,7 +14,6 @@ BEGIN {
 my @tests = (
     {   name         => 'Data Pageset - pass',
         distribution => 'Data::Pageset',
-        version      => 1.04,
         json_url   => 'http://www.cpantesters.org/distro/D/Data-Pageset.json',
         total_fail => 0,
     },
@@ -44,6 +43,9 @@ foreach my $test (@tests) {
     is( $dist_query->json_url, $test->{json_url}, "JSON urls match" );
     
     my $all = $dist_query->all();
+    
+    use Data::Dumper;
+    warn Dumper($all);
     
     # ok( $dist_query->number_failed() == $test->{total_fail},
     #         'Correct number of fails' );

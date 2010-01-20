@@ -7,7 +7,7 @@ use CPAN::Testers::WWW::Reports::Parser;
 use CPAN::Testers::Reports::Query::JSON::Set;
 
 has distribution => ( isa => 'Str', is => 'ro', );
-has version      => ( isa => 'Str', is => 'rw', default => '');
+has version      => ( is => 'rw' );
 has parser       => (
     isa => 'Str',
     is  => 'rw',
