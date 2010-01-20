@@ -10,7 +10,7 @@ WriteMakefile(
         'LWP::Simple'                         => 0,
         'Moose'                               => 0,
         'Test::More'                          => 0,
-        'CPAN::Testers::WWW::Reports::Parser' => 0.01,
+        'CPAN::Testers::WWW::Reports::Parser' => 0.02,
         'version'                             => 0,
     },
 );
