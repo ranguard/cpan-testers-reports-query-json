@@ -7,7 +7,7 @@ use CPAN::Testers::WWW::Reports::Parser;
 use CPAN::Testers::Reports::Query::JSON::Set;
 
 has distribution => ( isa => 'Str', is => 'ro', );
-has version      => ( is => 'rw' );
+has version      => ( isa => 'Str', is => 'rw' );
 has parser       => (
     isa => 'Str',
     is  => 'rw',
@@ -137,11 +137,11 @@ sub find_current_version {
 
         my $this_version = version->new( $data->version() );
         if ( $this_version > $max_version ) {
-            $max_version = $self->version($this_version);
+            $max_version = $this_version;
         }
     }
 
-    return $self->version("$max_version");
+    return $self->version($max_version->stringify);
 }
 
 sub _get_data_for_version {

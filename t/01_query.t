@@ -36,7 +36,7 @@ foreach my $test (@tests) {
     ok( 1, "$test->{name} tests" );
     my $dist_query = CTRQJTester->new(
         {   distribution => $test->{distribution},
-            version      => $test->{version},
+            version      => $test->{version} || '0',
         }
     );
     is( ref($dist_query),      'CTRQJTester',     'Got object back' );

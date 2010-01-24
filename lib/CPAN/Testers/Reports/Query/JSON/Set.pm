@@ -1,10 +1,10 @@
 package CPAN::Testers::Reports::Query::JSON::Set;
 use Moose;
 
-has total_tests    => ( isa => 'Int',      is => 'rw', );
-has number_passed  => ( isa => 'Int',      is => 'rw', );
-has number_failed  => ( isa => 'Str',      is => 'rw', );
-has percent_passed => ( isa => 'Str',      is => 'rw', );
+has total_tests    => ( isa => 'Int',      is => 'rw', default => 0);
+has number_passed  => ( isa => 'Int',      is => 'rw', default => 0);
+has number_failed  => ( isa => 'Str',      is => 'rw', default => 0);
+has percent_passed => ( isa => 'Str',      is => 'rw', default => 0);
 has data           => ( isa => 'ArrayRef', is => 'rw', );
 
 sub BUILD {
@@ -18,6 +18,8 @@ sub BUILD {
         $total_tests++;
         $number_failed++ unless $data->state eq 'pass';
     }
+    return unless $total_tests;
+    
     $self->total_tests($total_tests);
     $self->number_failed($number_failed);
     $self->number_passed( $total_tests - $number_failed );
