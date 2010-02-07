@@ -27,9 +27,8 @@ sub BUILD {
 
     # calc percent
     $self->percent_passed( ( $self->number_passed() / $total_tests ) * 100 );
+    # We don't need the data now
     $self->data( [] );
-    use Data::Dumper;
-    warn Dumper($self);
 }
 
 1;
