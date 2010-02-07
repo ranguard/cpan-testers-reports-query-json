@@ -1,3 +1,4 @@
+Changes
 lib/CPAN/Testers/Reports/Query/JSON.pm
 lib/CPAN/Testers/Reports/Query/JSON/Set.pm
 Makefile.PL
