@@ -12,22 +12,40 @@ BEGIN {
 }
 
 my @tests = (
-    {   name         => 'Data Pageset',
+    {   name         => 'Data Pageset 1.05',
         distribution => 'Data::Pageset',
         json_url   => 'http://www.cpantesters.org/distro/D/Data-Pageset.json',
         win32_only => {
-            total_tests => 28,
-            number_fail => 2,
+            total_tests => 1,
+            number_fail => 0,
         },
         non_win32 => {
-            total_tests => 778,
-            number_fail => 8,
+            total_tests => 3,
+            number_fail => 1,
         },
         all => {
-            total_tests => 806,
-            number_fail => 10,
+            total_tests => 4,
+            number_fail => 1,
         },
     },
+    {   name         => 'Data Pageset 1.04',
+        distribution => 'Data::Pageset',
+        version      => 1.02,
+        json_url   => 'http://www.cpantesters.org/distro/D/Data-Pageset.json',
+        win32_only => {
+            total_tests => 0,
+            number_fail => 0,
+        },
+        non_win32 => {
+            total_tests => 1,
+            number_fail => 1,
+        },
+        all => {
+            total_tests => 1,
+            number_fail => 1,
+        },
+    },
+
 );
 
 foreach my $test (@tests) {
@@ -41,8 +59,7 @@ foreach my $test (@tests) {
     is( ref($dist_query),       'CTRQJTester',     'Got object back' );
     is( $dist_query->_json_url, $test->{json_url}, "JSON urls match" );
 
-    #    foreach my $type (qw(all win32_only non_win32)) {
-    foreach my $type (qw(all )) {
+    foreach my $type (qw(all non_win32 win32_only)) {
         my $test_set = $test->{$type};
         my $set      = $dist_query->$type();
 
