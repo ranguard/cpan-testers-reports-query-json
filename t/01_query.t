@@ -12,23 +12,22 @@ BEGIN {
 }
 
 my @tests = (
-    {   name         => 'Data Pageset - pass',
+    {   name         => 'Data Pageset',
         distribution => 'Data::Pageset',
         json_url   => 'http://www.cpantesters.org/distro/D/Data-Pageset.json',
-        total_fail => 0,
+        win32_only => {
+            total_tests => 28,
+            number_fail => 2,
+        },
+        non_win32 => {
+            total_tests => 778,
+            number_fail => 8,
+        },
+        all => {
+            total_tests => 806,
+            number_fail => 10,
+        },
     },
-
-    {   name         => 'Data Pageset - fail',
-        distribution => 'Data::Pageset',
-        version      => 1.04,
-        json_url   => 'http://www.cpantesters.org/distro/D/Data-Pageset.json',
-        total_fail => 1,
-        fail_conf  => {
-            windows_failed     => 0,
-            non_windows_failed => 1
-        }
-    },
-
 );
 
 foreach my $test (@tests) {
@@ -39,29 +38,22 @@ foreach my $test (@tests) {
             version      => $test->{version} || '0',
         }
     );
-    is( ref($dist_query),      'CTRQJTester',     'Got object back' );
-    is( $dist_query->json_url, $test->{json_url}, "JSON urls match" );
-    
-    my $all = $dist_query->all();
-    
-    use Data::Dumper;
-    warn Dumper($all);
-    
-    # ok( $dist_query->number_failed() == $test->{total_fail},
-    #         'Correct number of fails' );
-    #     if ( $test->{total_fail} ) {
-    # 
-    #         #    windows_failed
-    #         is( $dist_query->windows_failed,
-    #             $test->{fail_conf}->{windows_failed},
-    #             'Matched window fails'
-    #         );
-    # 
-    #         # Non-window fails
-    #         is( $dist_query->non_windows_failed,
-    #             $test->{fail_conf}->{non_windows_failed},
-    #             'Matched non window fails'
-    #         );
-    # 
-    #     }
+    is( ref($dist_query),       'CTRQJTester',     'Got object back' );
+    is( $dist_query->_json_url, $test->{json_url}, "JSON urls match" );
+
+    #    foreach my $type (qw(all win32_only non_win32)) {
+    foreach my $type (qw(all )) {
+        my $test_set = $test->{$type};
+        my $set      = $dist_query->$type();
+
+        is( $set->total_tests(),
+            $test_set->{total_tests},
+            "total tests: $type"
+        );
+        is( $set->number_failed(),
+            $test_set->{number_fail},
+            "total fail: $type"
+        );
+
+    }
 }

@@ -6,15 +6,59 @@ use LWP::Simple;
 use CPAN::Testers::WWW::Reports::Parser;
 use CPAN::Testers::Reports::Query::JSON::Set;
 
-has distribution => ( isa => 'Str', is => 'ro', );
-has version      => ( isa => 'Str', is => 'rw' );
-has parser       => (
-    isa => 'Str',
-    is  => 'rw',
-    isa => 'CPAN::Testers::WWW::Reports::Parser'
+our $VERSION = '0.01';
+
+has distribution    => ( isa => 'Str', is => 'ro', );
+has version         => ( isa => 'Str', is => 'rw' );
+has current_version => ( isa => 'Str', is => 'ro', lazy_build => 1 );
+has versions => ( isa => 'ArrayRef[Str]', is => 'ro', lazy_build => 1 );
+has report => (
+    is         => 'rw',
+    lazy_build => 1,
+    isa        => 'ArrayRef[CPAN::Testers::WWW::Reports::Report]',
 );
 
-our $VERSION = '0.01';
+sub _build_current_version {
+    my $self   = shift;
+    my $report = $self->report();
+
+    my $max_version = version->new('0');
+    my $version     = $self->versions()->[0];
+    return $self->version($version);
+}
+
+sub _build_report {
+    my $self = shift;
+
+    my $data = $self->_raw_json();
+
+    my $obj = CPAN::Testers::WWW::Reports::Parser->new(
+        format  => 'JSON',
+        data    => $data,
+        objects => 1,
+    );
+
+    my @results;
+    while ( my $data = $obj->report() ) {
+        next unless $data->csspatch() eq 'unp';
+        push( @results, $data );
+    }
+
+    return \@results;
+}
+
+sub _build_versions {
+    my $self   = shift;
+    my $report = $self->report();
+
+    my %versions;
+    foreach my $data ( @{$report} ) {
+        my $this_version = version->new( $data->version() );
+        $versions{ $this_version->stringify } = 1;
+    }
+    my @vers = reverse sort keys %versions;
+    return \@vers;
+}
 
 =HEAD1 NAME
  
@@ -51,21 +95,46 @@ our $VERSION = '0.01';
         $non_win32->number_passed(),
         $non_win32->number_failed(),
         $non_win32->percent_passed();
-
-    # Return a CPAN::Testers::WWW::Reports::Parser object
-    my $parser = $dist_query->get_parser();
+        
+    # Get results for a specific OS
+    my $specific_os = $dist_query->for_os('linux');
   
 =head1 DESCRIPTION
 
 This module queries the cpantesters website (via the JSON interface) and 
 gets the test results back, it then parses these to answer a few simple questions.
 
+This module only reports on versions of Perl which are unpatched.
+
+=head2 all
+
+Get stats on all tests
+
+=head2 win32_only
+
+Only windows 32 tests
+
+=head2 non_win32
+
+Non windows.
+
+=head2 for_os
+
+  my $report = $dist_query->for_os('linux');
+
+=head2 current_version
+
+  my $current_version = $query->current_version();
+
+Sets $query->version() and returns the largest version
+
 =cut
+
 
 sub all {
     my $self = shift;
 
-    return $self->_create_set();
+    return $self->_create_set( { name => 'all', } );
 }
 
 sub win32_only {
@@ -76,6 +145,7 @@ sub win32_only {
                 'MSWin32' => 1,
                 'cygwin'  => 1,
             },
+            name => 'win32_only',
         }
     );
 
@@ -89,9 +159,19 @@ sub non_win32 {
                 'MSWin32' => 1,
                 'cygwin'  => 1,
             },
+            name => 'non_win32',
         }
     );
 
+}
+
+sub for_os {
+    my ( $self, $os ) = @_;
+    return $self->_create_set(
+        {   os_include_only => { $os => 1, },
+            name            => $os,
+        }
+    );
 }
 
 sub _create_set {
@@ -99,14 +179,11 @@ sub _create_set {
 
     $conf ||= {};
 
-    my $parser = $self->get_parser();
-
     my @os_data;
 
     foreach my $data ( @{ $self->_get_data_for_version() } ) {
 
         # Only want non-patched Perl at the moment
-        next if $data->csspatch() ne 'unp';
         if ( $conf->{os_exclude} ) {
             next if $conf->{os_exclude}->{ $data->osname() };
         }
@@ -117,82 +194,33 @@ sub _create_set {
     }
 
     return CPAN::Testers::Reports::Query::JSON::Set->new(
-        { data => \@os_data, } );
+        { data => \@os_data, name => $conf->{name} } );
 }
 
-=head2 find_current_version
-
-    my $current_version = $query->find_current_version();
-
-Sets $query->version() and returns the largest version
-
-=cut
-
-sub find_current_version {
-    my $self   = shift;
-    my $parser = $self->get_parser();
-
-    my $max_version = version->new('0');
-    while ( my $data = $parser->report() ) {
-
-        my $this_version = version->new( $data->version() );
-        if ( $this_version > $max_version ) {
-            $max_version = $this_version;
-        }
-    }
-
-    return $self->version($max_version->stringify);
-}
 
 sub _get_data_for_version {
     my $self    = shift;
-    my $version = $self->version || $self->find_current_version;
-    my $parser  = $self->get_parser();
+    my $version = $self->version || $self->current_version;
+    my $report  = $self->report();
 
-    my @data;
-    while ( my $data = $parser->report() ) {
-
-        push( @data, $data ) if $data->version() eq $version;
-    }
+    my @data = grep { $_->version() eq $version } @{$report};
     return \@data;
-
 }
 
-sub get_parser {
-    my $self = shift;
-    $self->_get_parser() unless $self->parser();
-    return $self->parser();
-}
-
-sub _get_parser {
-    my $self = shift;
-
-    my $data = $self->raw_json();
-
-    my $obj = CPAN::Testers::WWW::Reports::Parser->new(
-        format  => 'JSON',    # or 'JSON'
-        data    => $data,
-        objects => 1,
-    );
-    return $self->parser($obj);
-
-}
-
-sub json_url {
+sub _json_url {
     my $self = shift;
     my $dist = $self->distribution();
     $dist =~ s/::/-/;
     my ($letter) = ( $dist =~ /(.{1})/ );
 
     return "http://www.cpantesters.org/distro/$letter/$dist.json";
-
 }
 
-sub raw_json {
+sub _raw_json {
     my $self = shift;
 
     # Fetch from website - could have caching here
-    return get( $self->json_url() );
+    return get( $self->_json_url() );
 }
 
 1;
