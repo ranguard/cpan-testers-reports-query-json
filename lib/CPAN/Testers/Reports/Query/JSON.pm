@@ -60,7 +60,7 @@ sub _build_versions {
     return \@vers;
 }
 
-=HEAD1 NAME
+=head1 NAME
  
   CPAN::Testers::Reports::Query::JSON - Find out about a distributions cpantesters results
   
@@ -127,6 +127,25 @@ Non windows.
   my $current_version = $query->current_version();
 
 Sets $query->version() and returns the largest version
+
+=head1 AUTHOR
+ 
+Leo Lapworth, LLAP@cuckoo.org
+ 
+=head1 BUGS
+ 
+None that I'm aware of - export may not encode correctly.
+ 
+=head1 Repository (git)
+
+http://github.com/ranguard/cpan-testers-reports-query-json,
+git://github.com/ranguard/cpan-testers-reports-query-json.git
+ 
+=head1 COPYRIGHT
+ 
+Copyright (c) Leo Lapworth. All rights reserved.
+This program is free software; you can redistribute
+it and/or modify it under the same terms as Perl itself.
 
 =cut
 
