@@ -1,14 +1,16 @@
 package CPAN::Testers::Reports::Query::JSON;
+
 use Moose;
+use namespace::autoclean;
 
 use version;
 use LWP::Simple;
 use CPAN::Testers::WWW::Reports::Parser;
 use CPAN::Testers::Reports::Query::JSON::Set;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
-has distribution    => ( isa => 'Str', is => 'ro', );
+has distribution    => ( isa => 'Str', is => 'ro', required   => 1 );
 has version         => ( isa => 'Str', is => 'rw' );
 has current_version => ( isa => 'Str', is => 'ro', lazy_build => 1 );
 has versions => ( isa => 'ArrayRef[Str]', is => 'ro', lazy_build => 1 );
@@ -19,12 +21,8 @@ has report => (
 );
 
 sub _build_current_version {
-    my $self   = shift;
-    my $report = $self->report();
-
-    my $max_version = version->new('0');
-    my $version     = $self->versions()->[0];
-    return $self->version($version);
+    my $self = shift;
+    return $self->versions()->[0];
 }
 
 sub _build_report {
@@ -43,7 +41,6 @@ sub _build_report {
         next unless $data->csspatch() eq 'unp';
         push( @results, $data );
     }
-
     return \@results;
 }
 
@@ -106,27 +103,31 @@ gets the test results back, it then parses these to answer a few simple question
 
 This module only reports on versions of Perl which are unpatched.
 
-=head2 all
+=head2 all()
 
-Get stats on all tests
+Get stats on all tests, returns a CPAN::Testers::Reports::Query::JSON::Set object.
 
-=head2 win32_only
+=head2 win32_only()
 
-Only windows 32 tests
+Returns a CPAN::Testers::Reports::Query::JSON::Set object for win32 only
+test results. 'MSWin32' and 'cygwin' are osnames.
 
-=head2 non_win32
+=head2 non_win32()
 
-Non windows.
+Non windows, returns a CPAN::Testers::Reports::Query::JSON::Set object.
 
-=head2 for_os
+=head2 for_os()
 
   my $report = $dist_query->for_os('linux');
+  
+Returns a CPAN::Testers::Reports::Query::JSON::Set object for the
+specified OS.
 
-=head2 current_version
+=head2 current_version()
 
   my $current_version = $query->current_version();
 
-Sets $query->version() and returns the largest version
+Returns the latest version available
 
 =head1 AUTHOR
  
@@ -148,7 +149,6 @@ This program is free software; you can redistribute
 it and/or modify it under the same terms as Perl itself.
 
 =cut
-
 
 sub all {
     my $self = shift;
@@ -216,7 +216,6 @@ sub _create_set {
         { data => \@os_data, name => $conf->{name} } );
 }
 
-
 sub _get_data_for_version {
     my $self    = shift;
     my $version = $self->version || $self->current_version;
@@ -241,5 +240,7 @@ sub _raw_json {
     # Fetch from website - could have caching here
     return get( $self->_json_url() );
 }
+
+__PACKAGE__->meta->make_immutable;
 
 1;

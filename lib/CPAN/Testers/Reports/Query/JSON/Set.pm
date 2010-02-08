@@ -1,5 +1,7 @@
 package CPAN::Testers::Reports::Query::JSON::Set;
+
 use Moose;
+use namespace::autoclean;
 
 has name           => ( isa => 'Str', is => 'ro', default => 'no-name' );
 has total_tests    => ( isa => 'Int', is => 'rw', default => 0 );
@@ -27,8 +29,45 @@ sub BUILD {
 
     # calc percent
     $self->percent_passed( ( $self->number_passed() / $total_tests ) * 100 );
+
     # We don't need the data now
     $self->data( [] );
 }
 
+__PACKAGE__->meta->make_immutable;
+
 1;
+
+__DATA__
+
+=head1 NAME
+
+  CPAN::Testers::Reports::Query::JSON::Set
+
+=head1 DESCRIPTION
+
+You should not use this directly, CPAN::Testers::Reports::Query::JSON
+returns objects of this type when you call all(), win32_only(), non_win32()
+or for_os().
+
+=head1 methods
+
+=over
+
+=item name() 
+        
+=item total_tests()   
+
+=item number_passed()
+
+=item number_failed()
+
+=item percent_passed()
+
+=back
+
+=head1 AUTHOR
+ 
+Leo Lapworth, LLAP@cuckoo.org
+
+=cut
