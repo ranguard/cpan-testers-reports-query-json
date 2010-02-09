@@ -1,3 +1,6 @@
+0.03 - Tue  9 Feb 2010 07:41:22 GMT
+    - add namespace::autoclean to dependencies!
+
 0.02 - Mon  8 Feb 2010 20:22:28 GMT
     - add namespace::autoclean
     - make immutable
