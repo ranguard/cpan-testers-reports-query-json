@@ -12,6 +12,7 @@ WriteMakefile(
         'Moose'                               => 0,
         'namespace::autoclean'                => 0.09,
         'Test::More'                          => 0,
+        'File::Slurp'                         => 0,
         'version'                             => 0,
     },
 );

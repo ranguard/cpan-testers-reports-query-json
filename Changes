@@ -1,3 +1,7 @@
+0.04 - Thu 11 Feb 2010 07:34:58 GMT
+    - Yes, modules used by Tests are needed in the Makefile.PL
+    - CPANTesters rock (for picking up stuff like this)
+
 0.03 - Tue  9 Feb 2010 07:41:22 GMT
     - add namespace::autoclean to dependencies!
 

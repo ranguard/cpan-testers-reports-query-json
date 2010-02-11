@@ -8,7 +8,7 @@ use LWP::Simple;
 use CPAN::Testers::WWW::Reports::Parser;
 use CPAN::Testers::Reports::Query::JSON::Set;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 has distribution    => ( isa => 'Str', is => 'ro', required   => 1 );
 has version         => ( isa => 'Str', is => 'rw' );
